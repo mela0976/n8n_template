@@ -1,0 +1,200 @@
+{
+  "name": "EXA copy",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "健康顧問",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What is your question?",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        0
+      ],
+      "id": "a5133745-8eb3-4d2a-8014-e3f4158252f7",
+      "name": "On form submission",
+      "webhookId": "4969018e-39ee-4d23-93dd-b453aaab2d3b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.exa.ai/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <Your_API_key>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json['What is your question?'] }}\",\n  \"category\": \"research paper\",\n  \"numResults\": 3,\n  \"startPublishedDate\": \"2022-01-01T00:00:00.000Z\",\n  \"includeDomains\": [\n    \"https://pubmed.ncbi.nlm.nih.gov/\"\n  ],\n  \"contents\": {\n    \"text\": true\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "bc59e9f4-1ac7-4ce9-8a5e-8b6de935c8b2",
+      "name": "HTTP EXA Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.results }}",
+        "options": {
+          "systemMessage": "請把所有文章濃縮成100字重點整理翻譯成繁體中文。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "e67ac79f-08a2-43b0-aa23-a509bf26a12a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -120,
+        160
+      ],
+      "id": "cb3a7f56-7a99-4a1d-99e7-731c347a229c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "u6qqJEKkbai5BXYQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/JBFqnCBsd6RMkjVDRZzb",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "output_format",
+              "value": "mp3_44100_128"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "<Your_API_key>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_multilingual_v2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "id": "1f1b0d1b-7d4a-4c7e-8a61-f71ac3e276d9",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTTP EXA Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP EXA Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "89124506-f3f5-4caf-80c8-aa5f30cd5e47",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c2b31f74c409e1e10a6d904591c27d43fc7fbb4ea05b2fa3731aaf421d7b804"
+  },
+  "id": "qRAuRBwYNAhusTGY",
+  "tags": []
+}
